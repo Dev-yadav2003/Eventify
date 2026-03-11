@@ -16,6 +16,35 @@ import {
   listUsersByRole,
 } from "../models/User.js";
 
+const getUploadedImagePath = (file) => (file ? `/uploads/events/${file.filename}` : undefined);
+
+const normalizeEventPayload = (body, file, existingEvent = null) => {
+  const price = Number(body.price ?? existingEvent?.price ?? 0);
+  const capacity = Number(body.capacity ?? existingEvent?.capacity ?? 100);
+
+  if (Number.isNaN(price) || price < 0) {
+    throw new Error("Price cannot be negative.");
+  }
+
+  if (Number.isNaN(capacity) || capacity < 0) {
+    throw new Error("Capacity cannot be negative.");
+  }
+
+  return {
+    title: body.title ?? existingEvent?.title,
+    description: body.description ?? existingEvent?.description,
+    category: body.category ?? existingEvent?.category,
+    date: body.date ?? existingEvent?.date,
+    time: body.time ?? existingEvent?.time ?? "",
+    location: body.location ?? existingEvent?.location,
+    price,
+    capacity,
+    registrationsCount: existingEvent?.registrationsCount ?? 0,
+    image: getUploadedImagePath(file) ?? body.image ?? existingEvent?.image ?? "",
+    status: body.status ?? existingEvent?.status ?? "published",
+  };
+};
+
 const seedOrganizerIfMissing = async () => {
   let organizer = await findUserByEmail("ananya.mehta@rangmanch.in");
 
@@ -73,8 +102,10 @@ export const getOrganizerDashboard = async (req, res) => {
 };
 
 export const createEvent = async (req, res) => {
+  const payload = normalizeEventPayload(req.body, req.file);
+
   const event = await createEventRecord({
-    ...req.body,
+    ...payload,
     organizerId: req.user._id,
   });
 
@@ -104,12 +135,14 @@ export const updateEvent = async (req, res) => {
     throw new Error("Event not found.");
   }
 
+  const payload = normalizeEventPayload(req.body, req.file, event);
+
   const updatedEvent = await updateEventForOrganizer(
     req.params.id,
     req.user._id,
     {
       ...event,
-      ...req.body,
+      ...payload,
     },
   );
 

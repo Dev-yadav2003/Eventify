@@ -50,6 +50,7 @@ const initializeSchema = async () => {
       description TEXT NOT NULL,
       category TEXT NOT NULL,
       date TIMESTAMPTZ NOT NULL,
+      event_time TEXT NOT NULL DEFAULT '',
       location TEXT NOT NULL,
       price NUMERIC(10, 2) NOT NULL DEFAULT 0,
       capacity INTEGER NOT NULL DEFAULT 100,
@@ -81,6 +82,17 @@ const initializeSchema = async () => {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+  `);
+
+  await pool.query(`
+    ALTER TABLE events
+    ADD COLUMN IF NOT EXISTS event_time TEXT NOT NULL DEFAULT '';
+
+    UPDATE events
+    SET event_time = TO_CHAR(date AT TIME ZONE 'Asia/Kolkata', 'HH24:MI')
+    WHERE event_time = ''
+       OR event_time LIKE '%AM'
+       OR event_time LIKE '%PM';
   `);
 
   await pool.query(`

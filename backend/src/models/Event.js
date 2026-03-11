@@ -11,6 +11,7 @@ const mapEvent = (row) => {
     description: row.description,
     category: row.category,
     date: row.date,
+    time: row.event_time,
     location: row.location,
     price: Number(row.price),
     capacity: row.capacity,
@@ -55,6 +56,7 @@ export const createManyEvents = async (events, client) => {
           description,
           category,
           date,
+          event_time,
           location,
           price,
           capacity,
@@ -65,7 +67,7 @@ export const createManyEvents = async (events, client) => {
           created_at,
           updated_at
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
         RETURNING *
       `,
       [
@@ -73,6 +75,7 @@ export const createManyEvents = async (events, client) => {
         event.description,
         event.category,
         event.date,
+        event.time ?? "",
         event.location,
         event.price ?? 0,
         event.capacity ?? 100,
@@ -120,7 +123,7 @@ export const findEventById = async (id, client = null) => {
   return mapEvent(rows[0]);
 };
 
-export const createEvent = async ({ title, description, category, date, location, price = 0, capacity = 100, image = "", status = "published", organizerId }) => {
+export const createEvent = async ({ title, description, category, date, time = "", location, price = 0, capacity = 100, image = "", status = "published", organizerId }) => {
   const { rows } = await query(
     `
       INSERT INTO events (
@@ -128,6 +131,7 @@ export const createEvent = async ({ title, description, category, date, location
         description,
         category,
         date,
+        event_time,
         location,
         price,
         capacity,
@@ -138,16 +142,16 @@ export const createEvent = async ({ title, description, category, date, location
         created_at,
         updated_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, 0, $8, $9, $10, NOW(), NOW())
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, $9, $10, $11, NOW(), NOW())
       RETURNING *
     `,
-    [title, description, category, date, location, price, capacity, image, status, organizerId]
+    [title, description, category, date, time, location, price, capacity, image, status, organizerId]
   );
 
   return findEventById(rows[0].id);
 };
 
-export const updateEventForOrganizer = async (id, organizerId, { title, description, category, date, location, price, capacity, registrationsCount, image, status }) => {
+export const updateEventForOrganizer = async (id, organizerId, { title, description, category, date, time, location, price, capacity, registrationsCount, image, status }) => {
   const { rows } = await query(
     `
       UPDATE events
@@ -156,17 +160,18 @@ export const updateEventForOrganizer = async (id, organizerId, { title, descript
         description = $4,
         category = $5,
         date = $6,
-        location = $7,
-        price = $8,
-        capacity = $9,
-        registrations_count = $10,
-        image = $11,
-        status = $12,
+        event_time = $7,
+        location = $8,
+        price = $9,
+        capacity = $10,
+        registrations_count = $11,
+        image = $12,
+        status = $13,
         updated_at = NOW()
       WHERE id = $1 AND organizer_id = $2
       RETURNING id
     `,
-    [id, organizerId, title, description, category, date, location, price, capacity, registrationsCount, image, status]
+    [id, organizerId, title, description, category, date, time, location, price, capacity, registrationsCount, image, status]
   );
 
   return findEventById(rows[0]?.id);

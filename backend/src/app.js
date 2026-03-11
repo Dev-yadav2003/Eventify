@@ -2,6 +2,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import morgan from "morgan";
+import path from "path";
 import authRoutes from "./routes/authRoutes.js";
 import eventRoutes from "./routes/eventRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
@@ -19,6 +20,7 @@ app.use(
 );
 app.use(express.json());
 app.use(morgan("dev"));
+app.use("/uploads", express.static(path.resolve("uploads")));
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });

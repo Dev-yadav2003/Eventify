@@ -7,6 +7,7 @@ import { useRealtimeRegistrations } from "../../hooks/useRealtimeRegistrations";
 
 export const BrowsePage = () => {
   const { apiUrl, user } = useAuth();
+  const imageBaseUrl = apiUrl.replace(/\/api$/, "");
   const [events, setEvents] = useState([]);
   const [registeredEventIds, setRegisteredEventIds] = useState(new Set());
   const [search, setSearch] = useState("");
@@ -170,6 +171,7 @@ export const BrowsePage = () => {
               onRegister={handleRegister}
               disabled={disabled}
               buttonLabel={buttonLabel}
+              imageBaseUrl={imageBaseUrl}
             />
           );
         })}

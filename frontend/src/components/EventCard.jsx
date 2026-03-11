@@ -7,20 +7,25 @@ const formatPrice = (price) =>
       }).format(price)
     : "Free";
 
-export const EventCard = ({ event, onRegister, disabled, buttonLabel = "Register" }) => (
-  <div className="group flex flex-col overflow-hidden rounded-[28px] border border-slate-100 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-2xl">
+export const EventCard = ({ event, onRegister, disabled, buttonLabel = "Register", imageBaseUrl = "" }) => {
+  const imageSrc = event.image?.startsWith("http") ? event.image : `${imageBaseUrl}${event.image || ""}`;
+
+  return (
+    <div className="group flex flex-col overflow-hidden rounded-[28px] border border-slate-100 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-2xl">
     <div className="relative aspect-[16/10] overflow-hidden">
       <button className="absolute right-3 top-3 z-10 rounded-xl bg-white/90 p-2 text-slate-900 shadow">
         <span className="material-symbols-outlined text-xl">favorite</span>
       </button>
       <div
         className="h-full w-full bg-cover bg-center transition duration-500 group-hover:scale-110"
-        style={{ backgroundImage: `url('${event.image}')` }}
+        style={{ backgroundImage: `url('${imageSrc}')` }}
       />
     </div>
     <div className="flex flex-1 flex-col p-5">
       <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.24em] text-primary">
         <span>{new Date(event.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
+        <span>|</span>
+        <span>{event.time || "--:--"}</span>
         <span>|</span>
         <span>{event.category}</span>
       </div>
@@ -43,5 +48,6 @@ export const EventCard = ({ event, onRegister, disabled, buttonLabel = "Register
         </button>
       </div>
     </div>
-  </div>
-);
+    </div>
+  );
+};
