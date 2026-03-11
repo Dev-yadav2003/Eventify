@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { query } from "../config/db.js";
+import { query, withTransaction } from "../config/db.js";
 
 const mapUser = (row, { includePassword = false } = {}) => {
   if (!row) {
@@ -38,16 +38,41 @@ export const createUser = async ({ name, email, password, role = "attendee", ava
   const passwordHash = await bcrypt.hash(password, 10);
   const normalizedEmail = email.trim().toLowerCase();
 
-  const { rows } = await query(
-    `
-      INSERT INTO users (name, email, password, role, avatar, created_at, updated_at)
-      VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-      RETURNING *
-    `,
-    [name.trim(), normalizedEmail, passwordHash, role, avatar]
-  );
+  return withTransaction(async (client) => {
+    const { rows } = await query(
+      `
+        INSERT INTO users (name, email, password, role, avatar, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+        RETURNING *
+      `,
+      [name.trim(), normalizedEmail, passwordHash, role, avatar],
+      client
+    );
 
-  return mapUser(rows[0]);
+    const user = rows[0];
+
+    if (role === "organizer") {
+      await query(
+        `
+          INSERT INTO organizer_profiles (user_id, organization_name, created_at, updated_at)
+          VALUES ($1, $2, NOW(), NOW())
+        `,
+        [user.id, name.trim()],
+        client
+      );
+    } else {
+      await query(
+        `
+          INSERT INTO attendee_profiles (user_id, city, created_at, updated_at)
+          VALUES ($1, $2, NOW(), NOW())
+        `,
+        [user.id, null],
+        client
+      );
+    }
+
+    return mapUser(user);
+  });
 };
 
 export const listUsersByRole = async (role) => {

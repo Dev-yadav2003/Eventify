@@ -22,12 +22,17 @@ export const registerUser = async (req, res) => {
 };
 
 export const loginUser = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, role } = req.body;
   const user = await findUserByEmail(email, { includePassword: true });
 
   if (!user || !(await matchPassword(password, user.password))) {
     res.status(401);
     throw new Error("Invalid email or password.");
+  }
+
+  if (role && user.role !== role) {
+    res.status(401);
+    throw new Error(`This account is registered as ${user.role}, not ${role}.`);
   }
 
   res.json({

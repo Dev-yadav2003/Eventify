@@ -28,6 +28,22 @@ const initializeSchema = async () => {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
+    CREATE TABLE IF NOT EXISTS organizer_profiles (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+      organization_name TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS attendee_profiles (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+      city TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
     CREATE TABLE IF NOT EXISTS events (
       id SERIAL PRIMARY KEY,
       title TEXT NOT NULL,
@@ -65,6 +81,24 @@ const initializeSchema = async () => {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+  `);
+
+  await pool.query(`
+    INSERT INTO organizer_profiles (user_id, organization_name, created_at, updated_at)
+    SELECT u.id, u.name, NOW(), NOW()
+    FROM users u
+    WHERE u.role = 'organizer'
+      AND NOT EXISTS (
+        SELECT 1 FROM organizer_profiles op WHERE op.user_id = u.id
+      );
+
+    INSERT INTO attendee_profiles (user_id, city, created_at, updated_at)
+    SELECT u.id, NULL, NOW(), NOW()
+    FROM users u
+    WHERE u.role = 'attendee'
+      AND NOT EXISTS (
+        SELECT 1 FROM attendee_profiles ap WHERE ap.user_id = u.id
+      );
   `);
 };
 

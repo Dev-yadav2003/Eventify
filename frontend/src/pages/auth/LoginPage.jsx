@@ -33,7 +33,7 @@ export const LoginPage = () => {
     setError("");
 
     try {
-      const user = await login({ email: form.email, password: form.password });
+      const user = await login({ email: form.email, password: form.password, role: form.role });
       navigate(user.role === "organizer" ? "/dashboard" : "/browse");
     } catch (err) {
       setError(err.message || "Login failed.");
