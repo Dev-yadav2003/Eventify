@@ -275,6 +275,7 @@ Real-time events include:
 * New event registrations
 * Dashboard statistics updates
 * Notifications delivery
+* Real time communication
 
 This allows dashboards to update instantly without refreshing the page.
 
